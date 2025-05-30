@@ -9,6 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ErrorResponse represents a generic error message
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 type TaskHandler struct {
 	repo repository.TaskRepository
 }
@@ -25,18 +30,18 @@ func NewTaskHandler(repo repository.TaskRepository) *TaskHandler {
 // @Produce  json
 // @Param   task body model.Task true "Task to create"
 // @Success 201 {object} model.Task
-// @Failure 400 {object} gin.H
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
 // @Router /tasks [post]
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	var task model.Task
 	if err := c.ShouldBindJSON(&task); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	if err := h.repo.CreateTask(task); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
 	c.JSON(http.StatusCreated, task)

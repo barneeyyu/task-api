@@ -47,7 +47,7 @@ A simple and elegant RESTful API for managing tasks — written in Go with the G
 ### ✅ 1. Clone the repo
 
 ```bash
-git clone https://github.com/yourusername/task-api.git
+git clone https://github.com/barneeyyu/task-api.git
 cd task-api
 ```
 
@@ -68,3 +68,18 @@ go run main.go
 ```bash
 go test
 ```
+
+## 🐳 Docker Deployment
+
+If you prefer to run the app in a container:
+
+### 🛠️ Build Docker image
+
+```bash
+docker build -t task-api .
+```
+
+### 🚀 Run Docker container
+
+```bash
+docker run -d -p 8080:8080 task-api
