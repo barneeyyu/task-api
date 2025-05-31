@@ -28,6 +28,7 @@ A simple and elegant RESTful API for managing tasks — written in Go with the G
 | Method | Endpoint        | Description        |
 |--------|-----------------|--------------------|
 | GET    | `/tasks`        | Get all tasks      |
+| GET    | `/tasks/{id}`   | Get a task by ID   |
 | POST   | `/tasks`        | Create new task    |
 | PUT    | `/tasks/{id}`   | Update a task      |
 | DELETE | `/tasks/{id}`   | Delete a task      |
