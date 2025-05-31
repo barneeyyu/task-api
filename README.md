@@ -32,8 +32,11 @@ A simple and elegant RESTful API for managing tasks — written in Go with the G
 | PUT    | `/tasks/{id}`   | Update a task      |
 | DELETE | `/tasks/{id}`   | Delete a task      |
 
-📖 Full API documentation available at (remember to run the server first) :  
-[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+### 🔗 Swagger UI (remember to run the server first) :  
+- 開發環境 URL：[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+
+### 🧪 Postman Collection Test
+[下載 Postman Collection (v2.1)](docs/postman/Task_Management_API.postman_collection.json)
 
 ---
 
@@ -55,6 +58,12 @@ cd task-api
 
 ```bash
 go mod tidy
+```
+
+### 🔑 3. Generate Swagger Documentation(Once you revise the API)
+
+```bash
+swag init
 ```
 
 ### 🔑 3. Run the server
