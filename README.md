@@ -92,3 +92,10 @@ docker build -t task-api .
 
 ```bash
 docker run -d -p 8080:8080 task-api
+```
+
+### Stop Docker container
+
+```bash
+docker stop <CONTAINER_ID>
+```

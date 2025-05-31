@@ -14,3 +14,7 @@ type TaskResponse struct {
 	CreatedAt time.Time  `json:"created_at" example:"2025-06-20T10:00:00Z"`
 	UpdatedAt time.Time  `json:"updated_at" example:"2025-06-20T10:00:00Z"`
 }
+
+type ErrorResponse struct {
+	Error string `json:"error" example:"invalid id format"`
+}

@@ -13,11 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// ErrorResponse represents a generic error message
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
 type TaskHandler struct {
 	repo repository.RepositoryInterface
 }
@@ -34,13 +29,13 @@ func NewTaskHandler(repo repository.RepositoryInterface) *TaskHandler {
 // @Produce      json
 // @Param        task body dto.CreateTaskRequest true "Task to create"
 // @Success      201 {object} dto.TaskResponse
-// @Failure      400 {object} ErrorResponse
-// @Failure      500 {object} ErrorResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /tasks [post]
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	var request dto.CreateTaskRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -54,7 +49,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 	createdTask, err := h.repo.CreateTask(&task)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -70,24 +65,25 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 // @Param        id query int false "Task ID"
 // @Success      200 {object} dto.TaskResponse
 // @Success      200 {array} dto.TaskResponse
-// @Failure      400 {object} ErrorResponse
-// @Failure      404 {object} ErrorResponse
-// @Failure      500 {object} ErrorResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /tasks [get]
+// @Router       /tasks/{id} [get]
 func (h *TaskHandler) GetTasks(c *gin.Context) {
 	idStr := c.Query("id")
 	if idStr != "" {
 		idUint, err := strconv.ParseUint(idStr, 10, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id format"})
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid id format"})
 			return
 		}
 		task, err := h.repo.GetTaskByID(uint(idUint))
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				c.JSON(http.StatusNotFound, ErrorResponse{Error: "task not found"})
+				c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "task not found"})
 			} else {
-				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+				c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 			}
 			return
 		}
@@ -97,7 +93,7 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 
 	tasks, err := h.repo.GetAllTasks()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -118,21 +114,21 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 // @Param        id path int true "Task ID"
 // @Param        task body dto.UpdateTaskRequest true "Updated task data"
 // @Success      200 {object} dto.TaskResponse
-// @Failure      400 {object} ErrorResponse
-// @Failure      404 {object} ErrorResponse
-// @Failure      500 {object} ErrorResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /tasks/{id} [put]
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idStr := c.Param("id")
 	idUint, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id format"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid id format"})
 		return
 	}
 
 	var request dto.UpdateTaskRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -154,7 +150,7 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	}
 
 	if err := h.repo.UpdateTask(fields, uint(idUint)); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -168,25 +164,25 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 // @Produce      json
 // @Param        id path int true "Task ID"
 // @Success      204 "No Content"
-// @Failure      400 {object} ErrorResponse
-// @Failure      404 {object} ErrorResponse
-// @Failure      500 {object} ErrorResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /tasks/{id} [delete]
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	idStr := c.Param("id")
 	idUint, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id format"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid id format"})
 		return
 	}
 
 	deleted, err := h.repo.DeleteTask(uint(idUint))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 	if !deleted {
-		c.JSON(http.StatusNotFound, ErrorResponse{Error: "task not found"})
+		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "task not found"})
 		return
 	}
 	c.Status(http.StatusNoContent)
