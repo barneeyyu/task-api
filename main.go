@@ -20,7 +20,7 @@ import (
 func main() {
 	db := orm.InitDB()
 	repo := repository.NewTaskRepository(db)
-	handler := handler.NewTaskHandler(*repo)
+	handler := handler.NewTaskHandler(repo)
 
 	r := router.SetupRouter(handler)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

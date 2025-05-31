@@ -75,7 +75,7 @@ go run main.go
 ### 🔑 4. Run the tests
 
 ```bash
-go test
+go test test/task_test.go
 ```
 
 ## 🐳 Docker Deployment

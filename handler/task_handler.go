@@ -19,10 +19,10 @@ type ErrorResponse struct {
 }
 
 type TaskHandler struct {
-	repo repository.TaskRepository
+	repo repository.RepositoryInterface
 }
 
-func NewTaskHandler(repo repository.TaskRepository) *TaskHandler {
+func NewTaskHandler(repo repository.RepositoryInterface) *TaskHandler {
 	return &TaskHandler{repo: repo}
 }
 
