@@ -38,7 +38,7 @@ func NewTaskHandler(repo repository.TaskRepository) *TaskHandler {
 // @Failure      500 {object} ErrorResponse
 // @Router       /tasks [post]
 func (h *TaskHandler) CreateTask(c *gin.Context) {
-	var request dto.TaskRequest
+	var request dto.CreateTaskRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
@@ -49,7 +49,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		Status:   0, // 預設未完成
 		DueDate:  request.DueDate,
 		Assignee: request.Assignee,
-		Tags:     request.Tags,
+		Tags:     &request.Tags,
 	}
 
 	createdTask, err := h.repo.CreateTask(&task)
@@ -107,4 +107,66 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, responses)
+}
+
+// UpdateTask godoc
+// @Summary      Update a task
+// @Description  Update task fields by ID
+// @Tags         tasks
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "Task ID"
+// @Param        task body dto.UpdateTaskRequest true "Updated task data"
+// @Success      200 {object} dto.TaskResponse
+// @Failure      400 {object} ErrorResponse
+// @Failure      404 {object} ErrorResponse
+// @Failure      500 {object} ErrorResponse
+// @Router       /tasks/{id} [put]
+func (h *TaskHandler) UpdateTask(c *gin.Context) {
+	idStr := c.Param("id")
+	idUint, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id format"})
+		return
+	}
+
+	var request dto.UpdateTaskRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	task, err := h.repo.GetTaskByID(uint(idUint))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, ErrorResponse{Error: "task not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		}
+		return
+	}
+
+	// 更新欄位
+	if request.Name != nil {
+		task.Name = *request.Name
+	}
+	if request.Status != nil {
+		task.Status = *request.Status
+	}
+	if request.DueDate != nil {
+		task.DueDate = request.DueDate
+	}
+	if request.Assignee != nil {
+		task.Assignee = *request.Assignee
+	}
+	if request.Tags != nil {
+		task.Tags = request.Tags
+	}
+
+	if err := h.repo.UpdateTask(task); err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.TaskResponse(*task))
 }

@@ -36,3 +36,10 @@ func (r *TaskRepository) GetAllTasks() ([]model.Task, error) {
 	}
 	return tasks, nil
 }
+
+func (r *TaskRepository) UpdateTask(task *model.Task) error {
+	if err := r.db.Save(task).Error; err != nil {
+		return err
+	}
+	return nil
+}
