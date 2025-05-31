@@ -1,12 +1,16 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
-	"task-api/model"
+	"strconv"
 
+	"task-api/dto"
+	"task-api/model"
 	"task-api/repository"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // ErrorResponse represents a generic error message
@@ -23,26 +27,84 @@ func NewTaskHandler(repo repository.TaskRepository) *TaskHandler {
 }
 
 // CreateTask godoc
-// @Summary Create a new task
-// @Description Create a task with name and status
-// @Tags tasks
-// @Accept  json
-// @Produce  json
-// @Param   task body model.Task true "Task to create"
-// @Success 201 {object} model.Task
-// @Failure 400 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
-// @Router /tasks [post]
+// @Summary      Create a new task
+// @Description  Create a task with name, due date, assignee and tags
+// @Tags         tasks
+// @Accept       json
+// @Produce      json
+// @Param        task body dto.CreateTaskRequest true "Task to create"
+// @Success      201 {object} dto.TaskResponse
+// @Failure      400 {object} ErrorResponse
+// @Failure      500 {object} ErrorResponse
+// @Router       /tasks [post]
 func (h *TaskHandler) CreateTask(c *gin.Context) {
-	var task model.Task
-	if err := c.ShouldBindJSON(&task); err != nil {
+	var request dto.TaskRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	if err := h.repo.CreateTask(task); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+	task := model.Task{
+		Name:     request.Name,
+		Status:   0, // 預設未完成
+		DueDate:  request.DueDate,
+		Assignee: request.Assignee,
+		Tags:     request.Tags,
 	}
 
-	c.JSON(http.StatusCreated, task)
+	createdTask, err := h.repo.CreateTask(&task)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	response := dto.TaskResponse(*createdTask)
+	c.JSON(http.StatusCreated, response)
+}
+
+// GetTasks godoc
+// @Summary      Get task(s)
+// @Description  Get a single task by ID (if provided), or all tasks
+// @Tags         tasks
+// @Produce      json
+// @Param        id query int false "Task ID"
+// @Success      200 {object} dto.TaskResponse
+// @Success      200 {array} dto.TaskResponse
+// @Failure      400 {object} ErrorResponse
+// @Failure      404 {object} ErrorResponse
+// @Failure      500 {object} ErrorResponse
+// @Router       /tasks [get]
+func (h *TaskHandler) GetTasks(c *gin.Context) {
+	idStr := c.Query("id")
+	if idStr != "" {
+		idUint, err := strconv.ParseUint(idStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id format"})
+			return
+		}
+		task, err := h.repo.GetTaskByID(uint(idUint))
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, ErrorResponse{Error: "task not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, dto.TaskResponse(*task))
+		return
+	}
+
+	tasks, err := h.repo.GetAllTasks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	var responses []dto.TaskResponse
+	for _, task := range tasks {
+		responses = append(responses, dto.TaskResponse(task))
+	}
+
+	c.JSON(http.StatusOK, responses)
 }

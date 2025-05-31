@@ -10,6 +10,7 @@ func SetupRouter(handler *handler.TaskHandler) *gin.Engine {
 	r := gin.Default()
 
 	r.POST("/tasks", handler.CreateTask)
+	r.GET("/tasks", handler.GetTasks)
 
 	return r
 }

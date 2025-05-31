@@ -1,4 +1,4 @@
-package model
+package dto
 
 import (
 	"time"
@@ -6,10 +6,10 @@ import (
 	"gorm.io/datatypes"
 )
 
-type Task struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Name      string         `gorm:"size:255;not null" json:"name"`
-	Status    int            `gorm:"type:int;default:0" json:"status"` // 0 = 未完成，1 = 已完成
+type TaskResponse struct {
+	ID        uint           `json:"id"`
+	Name      string         `json:"name"`
+	Status    int            `json:"status"`
 	DueDate   *time.Time     `json:"due_date,omitempty"`
 	Assignee  string         `json:"assignee"`
 	Tags      datatypes.JSON `json:"tags,omitempty"`
