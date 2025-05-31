@@ -7,4 +7,5 @@ type RepositoryInterface interface {
 	GetTaskByID(id uint) (*model.Task, error)
 	GetAllTasks() ([]model.Task, error)
 	UpdateTask(task model.Task) error
+	DeleteTask(id uint) error
 }

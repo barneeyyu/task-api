@@ -49,7 +49,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		Status:   0, // 預設未完成
 		DueDate:  request.DueDate,
 		Assignee: request.Assignee,
-		Tags:     &request.Tags,
+		Tags:     request.Tags,
 	}
 
 	createdTask, err := h.repo.CreateTask(&task)
@@ -136,37 +136,58 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	task, err := h.repo.GetTaskByID(uint(idUint))
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, ErrorResponse{Error: "task not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		}
-		return
-	}
-
-	// 更新欄位
+	fields := map[string]interface{}{}
 	if request.Name != nil {
-		task.Name = *request.Name
+		fields["name"] = *request.Name
 	}
 	if request.Status != nil {
-		task.Status = *request.Status
+		fields["status"] = *request.Status
 	}
 	if request.DueDate != nil {
-		task.DueDate = request.DueDate
+		fields["due_date"] = *request.DueDate
 	}
 	if request.Assignee != nil {
-		task.Assignee = *request.Assignee
+		fields["assignee"] = *request.Assignee
 	}
 	if request.Tags != nil {
-		task.Tags = request.Tags
+		fields["tags"] = request.Tags
 	}
 
-	if err := h.repo.UpdateTask(task); err != nil {
+	if err := h.repo.UpdateTask(fields, uint(idUint)); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.TaskResponse(*task))
+	c.Status(http.StatusNoContent)
+}
+
+// DeleteTask godoc
+// @Summary      Delete a task
+// @Description  Delete a task by ID
+// @Tags         tasks
+// @Produce      json
+// @Param        id path int true "Task ID"
+// @Success      204 "No Content"
+// @Failure      400 {object} ErrorResponse
+// @Failure      404 {object} ErrorResponse
+// @Failure      500 {object} ErrorResponse
+// @Router       /tasks/{id} [delete]
+func (h *TaskHandler) DeleteTask(c *gin.Context) {
+	idStr := c.Param("id")
+	idUint, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id format"})
+		return
+	}
+
+	deleted, err := h.repo.DeleteTask(uint(idUint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+		return
+	}
+	if !deleted {
+		c.JSON(http.StatusNotFound, ErrorResponse{Error: "task not found"})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

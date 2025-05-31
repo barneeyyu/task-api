@@ -1,23 +1,86 @@
 basePath: /
 definitions:
-  handler.ErrorResponse:
+  dto.CreateTaskRequest:
     properties:
-      error:
+      assignee:
+        example: Barney
         type: string
+      due_date:
+        example: "2025-06-20T10:00:00Z"
+        type: string
+      name:
+        example: write a blog
+        type: string
+      tags:
+        example:
+        - '["doc"'
+        - '"internal"'
+        - '"urgent"]'
+        items:
+          type: string
+        type: array
+    required:
+    - name
     type: object
-  model.Task:
+  dto.TaskResponse:
     properties:
+      assignee:
+        example: Barney
+        type: string
       created_at:
+        example: "2025-06-20T10:00:00Z"
+        type: string
+      due_date:
+        example: "2025-06-20T10:00:00Z"
         type: string
       id:
+        example: 1
         type: integer
       name:
-        description: 任務名稱
+        example: write a blog
+        type: string
+      status:
+        example: 1
+        type: integer
+      tags:
+        example:
+        - '["doc"'
+        - '"internal"'
+        - '"urgent"]'
+        items:
+          type: string
+        type: array
+      updated_at:
+        example: "2025-06-20T10:00:00Z"
+        type: string
+    type: object
+  dto.UpdateTaskRequest:
+    properties:
+      assignee:
+        example: Barney
+        type: string
+      due_date:
+        example: "2025-06-20T10:00:00Z"
+        type: string
+      name:
+        example: write a blog
         type: string
       status:
         description: 0 = 未完成，1 = 已完成
+        example: 1
         type: integer
-      updated_at:
+      tags:
+        example:
+        - '["doc"'
+        - '"internal"'
+        - '"urgent"]'
+        items:
+          type: string
+        type: array
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
         type: string
     type: object
 host: localhost:8080
@@ -28,24 +91,55 @@ info:
   version: "1.0"
 paths:
   /tasks:
+    get:
+      description: Get a single task by ID (if provided), or all tasks
+      parameters:
+      - description: Task ID
+        in: query
+        name: id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TaskResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get task(s)
+      tags:
+      - tasks
     post:
       consumes:
       - application/json
-      description: Create a task with name and status
+      description: Create a task with name, due date, assignee and tags
       parameters:
       - description: Task to create
         in: body
         name: task
         required: true
         schema:
-          $ref: '#/definitions/model.Task'
+          $ref: '#/definitions/dto.CreateTaskRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/model.Task'
+            $ref: '#/definitions/dto.TaskResponse'
         "400":
           description: Bad Request
           schema:
@@ -55,6 +149,73 @@ paths:
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
       summary: Create a new task
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      description: Delete a task by ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Delete a task
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Update task fields by ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated task data
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TaskResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Update a task
       tags:
       - tasks
 swagger: "2.0"

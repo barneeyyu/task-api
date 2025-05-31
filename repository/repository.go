@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"task-api/model"
 
 	"gorm.io/gorm"
@@ -37,9 +38,21 @@ func (r *TaskRepository) GetAllTasks() ([]model.Task, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) UpdateTask(task *model.Task) error {
-	if err := r.db.Save(task).Error; err != nil {
-		return err
+func (r *TaskRepository) UpdateTask(fields map[string]interface{}, id uint) error {
+	result := r.db.Model(&model.Task{}).
+		Where("id = ?", id).
+		Updates(fields)
+
+	if result.RowsAffected == 0 {
+		return errors.New("task not found")
 	}
 	return nil
+}
+
+func (r *TaskRepository) DeleteTask(id uint) (bool, error) {
+	result := r.db.Delete(&model.Task{}, id)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
 }
